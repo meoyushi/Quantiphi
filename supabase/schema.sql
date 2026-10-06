@@ -66,151 +66,32 @@ ALTER TABLE public.project_members ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.tasks ENABLE ROW LEVEL SECURITY;
 
 -- Profiles policies
-CREATE POLICY "Public profiles are viewable by authenticated users"
-  ON public.profiles FOR SELECT
-  TO authenticated
-  USING (true);
-
-CREATE POLICY "Users can insert their own profile"
-  ON public.profiles FOR INSERT
-  TO authenticated
-  WITH CHECK (auth.uid() = id);
-
-CREATE POLICY "Users can update their own profile"
-  ON public.profiles FOR UPDATE
-  TO authenticated
-  USING (auth.uid() = id);
+CREATE POLICY "Profiles accessible by all"
+  ON public.profiles FOR ALL
+  TO public
+  USING (true)
+  WITH CHECK (true);
 
 -- Projects policies
-CREATE POLICY "Users can view projects they are a member of"
-  ON public.projects FOR SELECT
-  TO authenticated
-  USING (
-    created_by = auth.uid() OR
-    EXISTS (
-      SELECT 1 FROM public.project_members
-      WHERE project_members.project_id = projects.id
-      AND project_members.user_id = auth.uid()
-    )
-  );
-
-CREATE POLICY "Authenticated users can create projects"
-  ON public.projects FOR INSERT
-  TO authenticated
-  WITH CHECK (auth.uid() = created_by);
-
-CREATE POLICY "Project creators and members can update projects"
-  ON public.projects FOR UPDATE
-  TO authenticated
-  USING (
-    created_by = auth.uid() OR
-    EXISTS (
-      SELECT 1 FROM public.project_members
-      WHERE project_members.project_id = projects.id
-      AND project_members.user_id = auth.uid()
-    )
-  );
-
-CREATE POLICY "Project creators can delete projects"
-  ON public.projects FOR DELETE
-  TO authenticated
-  USING (created_by = auth.uid());
+CREATE POLICY "Projects accessible by all"
+  ON public.projects FOR ALL
+  TO public
+  USING (true)
+  WITH CHECK (true);
 
 -- Project Members policies
-CREATE POLICY "Users can view members of their projects"
-  ON public.project_members FOR SELECT
-  TO authenticated
-  USING (
-    EXISTS (
-      SELECT 1 FROM public.project_members pm
-      WHERE pm.project_id = project_members.project_id
-      AND pm.user_id = auth.uid()
-    ) OR
-    EXISTS (
-      SELECT 1 FROM public.projects p
-      WHERE p.id = project_members.project_id
-      AND p.created_by = auth.uid()
-    )
-  );
-
-CREATE POLICY "Project creators/members can add members"
-  ON public.project_members FOR INSERT
-  TO authenticated
-  WITH CHECK (
-    EXISTS (
-      SELECT 1 FROM public.projects p
-      WHERE p.id = project_members.project_id
-      AND (p.created_by = auth.uid() OR EXISTS (
-        SELECT 1 FROM public.project_members pm
-        WHERE pm.project_id = project_members.project_id AND pm.user_id = auth.uid()
-      ))
-    )
-  );
+CREATE POLICY "Project members accessible by all"
+  ON public.project_members FOR ALL
+  TO public
+  USING (true)
+  WITH CHECK (true);
 
 -- Tasks policies
-CREATE POLICY "Users can view tasks of projects they belong to"
-  ON public.tasks FOR SELECT
-  TO authenticated
-  USING (
-    EXISTS (
-      SELECT 1 FROM public.project_members pm
-      WHERE pm.project_id = tasks.project_id
-      AND pm.user_id = auth.uid()
-    ) OR
-    EXISTS (
-      SELECT 1 FROM public.projects p
-      WHERE p.id = tasks.project_id
-      AND p.created_by = auth.uid()
-    )
-  );
-
-CREATE POLICY "Users can create tasks in projects they belong to"
-  ON public.tasks FOR INSERT
-  TO authenticated
-  WITH CHECK (
-    EXISTS (
-      SELECT 1 FROM public.project_members pm
-      WHERE pm.project_id = tasks.project_id
-      AND pm.user_id = auth.uid()
-    ) OR
-    EXISTS (
-      SELECT 1 FROM public.projects p
-      WHERE p.id = tasks.project_id
-      AND p.created_by = auth.uid()
-    )
-  );
-
-CREATE POLICY "Users can update tasks in projects they belong to"
-  ON public.tasks FOR UPDATE
-  TO authenticated
-  USING (
-    EXISTS (
-      SELECT 1 FROM public.project_members pm
-      WHERE pm.project_id = tasks.project_id
-      AND pm.user_id = auth.uid()
-    ) OR
-    EXISTS (
-      SELECT 1 FROM public.projects p
-      WHERE p.id = tasks.project_id
-      AND p.created_by = auth.uid()
-    )
-  );
-
-CREATE POLICY "Users can delete tasks in projects they belong to"
-  ON public.tasks FOR DELETE
-  TO authenticated
-  USING (
-    EXISTS (
-      SELECT 1 FROM public.project_members pm
-      WHERE pm.project_id = tasks.project_id
-      AND pm.user_id = auth.uid()
-    ) OR
-    EXISTS (
-      SELECT 1 FROM public.projects p
-      WHERE p.id = tasks.project_id
-      AND p.created_by = auth.uid()
-    )
-  );
+CREATE POLICY "Tasks accessible by all"
+  ON public.tasks FOR ALL
+  TO public
+  USING (true)
+  WITH CHECK (true);
 
 -- ==========================================================
 -- AUTOMATIC PROFILE CREATION TRIGGER ON AUTH.USERS
