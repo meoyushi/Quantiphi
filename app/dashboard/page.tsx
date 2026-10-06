@@ -61,20 +61,59 @@ export default function DashboardPage() {
         const { data: { user } } = await supabase.auth.getUser();
 
         if (user) {
-          setCurrentUser({
-            id: user.id,
-            fullName: user.user_metadata?.full_name || user.email?.split("@")[0] || "User",
-            email: user.email || null,
-            avatarUrl: null,
-          });
+          const { data: profile } = await supabase
+            .from("profiles")
+            .select("*")
+            .eq("id", user.id)
+            .single();
+
+          if (profile) {
+            setCurrentUser({
+              id: profile.id,
+              fullName: profile.full_name,
+              email: profile.email,
+              avatarUrl: profile.avatar_url,
+            });
+          } else {
+            setCurrentUser({
+              id: user.id,
+              fullName: user.user_metadata?.full_name || user.email?.split("@")[0] || "User",
+              email: user.email || null,
+              avatarUrl: null,
+            });
+          }
         } else {
-          // Demo fallback user
-          setCurrentUser({
-            id: "11111111-1111-1111-1111-111111111111",
-            fullName: "Aayushi Rajesh",
-            email: "aayushi@example.com",
-            avatarUrl: null,
-          });
+          // Check if a demo account was selected
+          const demoEmail = typeof window !== "undefined" ? localStorage.getItem("taskflow_demo_user") : null;
+          if (demoEmail === "rahul@example.com") {
+            setCurrentUser({
+              id: "22222222-2222-2222-2222-222222222222",
+              fullName: "Rahul Sharma",
+              email: "rahul@example.com",
+              avatarUrl: null,
+            });
+          } else if (demoEmail === "priya@example.com") {
+            setCurrentUser({
+              id: "33333333-3333-3333-3333-333333333333",
+              fullName: "Priya Mehta",
+              email: "priya@example.com",
+              avatarUrl: null,
+            });
+          } else if (demoEmail === "arjun@example.com") {
+            setCurrentUser({
+              id: "44444444-4444-4444-4444-444444444444",
+              fullName: "Arjun Patel",
+              email: "arjun@example.com",
+              avatarUrl: null,
+            });
+          } else {
+            setCurrentUser({
+              id: "11111111-1111-1111-1111-111111111111",
+              fullName: "Aayushi Rajesh",
+              email: "aayushi@example.com",
+              avatarUrl: null,
+            });
+          }
         }
 
         // Fetch projects
@@ -294,6 +333,9 @@ export default function DashboardPage() {
   // 7. Logout Handler
   const handleLogout = async () => {
     try {
+      if (typeof window !== "undefined") {
+        localStorage.removeItem("taskflow_demo_user");
+      }
       const supabase = createClient();
       await supabase.auth.signOut();
     } catch {

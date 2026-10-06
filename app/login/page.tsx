@@ -47,10 +47,32 @@ export default function LoginPage() {
     }
   };
 
-  const handleDemoLogin = (demoEmail: string) => {
+  const handleDemoLogin = async (demoEmail: string) => {
+    setIsLoading(true);
+    setError(null);
     setEmail(demoEmail);
     setPassword("password123");
-    router.push("/dashboard");
+
+    try {
+      const supabase = createClient();
+      const { error: authError } = await supabase.auth.signInWithPassword({
+        email: demoEmail,
+        password: "password123",
+      });
+
+      if (authError) {
+        localStorage.setItem("taskflow_demo_user", demoEmail);
+      } else {
+        localStorage.removeItem("taskflow_demo_user");
+      }
+      router.push("/dashboard");
+      router.refresh();
+    } catch {
+      localStorage.setItem("taskflow_demo_user", demoEmail);
+      router.push("/dashboard");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
